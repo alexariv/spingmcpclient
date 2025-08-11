@@ -1,49 +1,97 @@
 package olog.springMCPclient;
 
-import io.modelcontextprotocol.client.McpSyncClient;
-import io.modelcontextprotocol.spec.McpSchema;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
 @RequestMapping("/mcp")
 public class McpController {
 
-  private final McpSyncClient mcp;
+  private static final String JSON = "application/json";
+  private static final String ACCEPT = "application/json, text/event-stream";
 
-  public McpController(McpSyncClient mcp) {
-    this.mcp = mcp;
+  private final HttpClient http = HttpClient.newHttpClient();
+  private final ObjectMapper mapper = new ObjectMapper();
+  private final AtomicLong ids = new AtomicLong(1);
+
+  private final String baseUrl;
+  private final String authHeaderValue;
+
+  public McpController(
+      @Value("${mcp.server.base-url:http://localhost:8080/mcp}") String baseUrl,
+      @Value("${mcp.server.auth:}") String authHeaderValue
+  ) {
+    this.baseUrl = baseUrl;
+    this.authHeaderValue = authHeaderValue;
+  }
+
+  private HttpRequest.Builder req() {
+    var b = HttpRequest.newBuilder(URI.create(baseUrl))
+        .header("Content-Type", JSON)
+        .header("Accept", ACCEPT);
+    if (!authHeaderValue.isBlank()) b.header("Authorization", authHeaderValue);
+    return b;
+  }
+
+  private String postRpc(Map<String, Object> rpc) throws Exception {
+    var body = mapper.writeValueAsString(rpc);
+    var res = http.send(
+        req().POST(HttpRequest.BodyPublishers.ofString(body)).build(),
+        HttpResponse.BodyHandlers.ofString()
+    );
+    return res.body();
   }
 
   @GetMapping("/tools")
-  public Object tools() {
-    return mcp.listTools();
+  public ResponseEntity<String> tools() throws Exception {
+    // {"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}
+    var rpc = Map.of(
+        "jsonrpc", "2.0",
+        "id", ids.getAndIncrement(),
+        "method", "tools/list",
+        "params", Map.of()
+    );
+    return ResponseEntity.ok(postRpc(rpc));
   }
 
   @GetMapping("/indices")
-  public Object indices(@RequestParam(defaultValue = "*") String pattern) {
-    // Map args directly
-    Map<String, Object> args = Map.of("index_pattern", pattern);
-
-    McpSchema.CallToolRequest req = McpSchema.CallToolRequest.builder()
-        .name("list_indices")
-        .arguments(args)  
-        .build();
-
-    return mcp.callTool(req);
+  public ResponseEntity<String> indices(@RequestParam(defaultValue = "*") String pattern) throws Exception {
+    var rpc = Map.of(
+        "jsonrpc", "2.0",
+        "id", ids.getAndIncrement(),
+        "method", "tools/call",
+        "params", Map.of(
+            "name", "list_indices",
+            "arguments", Map.of("index_pattern", pattern)
+        )
+    );
+    return ResponseEntity.ok(postRpc(rpc));
   }
 
   @PostMapping("/search")
-  public Object search(@RequestBody Map<String, Object> body) {
-    // body already is Map<String,Object>: { "index": "...", "query_body": {...} }
-    McpSchema.CallToolRequest req = McpSchema.CallToolRequest.builder()
-        .name("search")
-        .arguments(body) 
-        .build();
-
-    return mcp.callTool(req);
+  public ResponseEntity<String> search(@RequestBody Map<String, Object> args) throws Exception {
+    var rpc = Map.of(
+        "jsonrpc", "2.0",
+        "id", ids.getAndIncrement(),
+        "method", "tools/call",
+        "params", Map.of(
+            "name", "search",
+            "arguments", args // expects {"index":"...","query_body":{...}}
+        )
+    );
+    return ResponseEntity.ok(postRpc(rpc));
   }
 }
+
+
 
 

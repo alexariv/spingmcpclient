@@ -8,8 +8,12 @@ spring:
         type: SYNC
         name: elastic-mcp-client
         version: 1.0.0
-        sse:
+        http:
           connections:
             elastic-es:
               url: http://localhost:8080
-              sse-endpoint: /mcp
+              endpoint: /mcp
+logging:
+  level:
+    io.modelcontextprotocol: DEBUG
+    org.springframework.ai.mcp: DEBUG

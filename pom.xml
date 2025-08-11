@@ -53,12 +53,11 @@
 
 <dependencies>
   <!-- Spring AI MCP Client Boot Starter (correct artifactId) -->
-  <dependency>
+<!-- <dependency>
     <groupId>org.springframework.ai</groupId>
     <artifactId>spring-ai-starter-mcp-client</artifactId>
-  </dependency>
+  </dependency> -->
 
-  <!-- Optional: WebFlux-based SSE transport -->
   <!--
   <dependency>
     <groupId>org.springframework.ai</groupId>
@@ -72,7 +71,6 @@
     <artifactId>mcp</artifactId>
   </dependency>
 
-  <!-- If you prefer the Spring WebMVC transport impls (optional) -->
   <!-- <dependency>
     <groupId>io.modelcontextprotocol.sdk</groupId>
     <artifactId>mcp-spring-webmvc</artifactId>
