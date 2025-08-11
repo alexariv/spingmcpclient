@@ -1,0 +1,33 @@
+package olog.springMCPclient;
+
+import io.modelcontextprotocol.client.McpSyncClient;
+import io.modelcontextprotocol.spec.McpSchema;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Map;
+
+@Component
+public class StartupRunner implements CommandLineRunner {
+
+   
+    private final McpSyncClient mcp;
+
+    public StartupRunner(McpSyncClient mcp) {
+        this.mcp = mcp;
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        //List available tools
+        List<McpSchema.Tool> tools = mcp.listTools();
+        System.out.println("Tools from Elasticsearch MCP server:");
+        tools.forEach(t -> System.out.println(" - " + t.getName()));
+
+        //Call list_indices
+        var result = mcp.callTool("list_indices", Map.of("index_pattern", "*"));
+        System.out.println("\nlist_indices result:");
+        System.out.println(result);
+    }
+}
