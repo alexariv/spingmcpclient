@@ -42,14 +42,27 @@ public class McpController {
     return b;
   }
 
-  private String postRpc(Map<String, Object> rpc) throws Exception {
-    var body = mapper.writeValueAsString(rpc);
-    var res = http.send(
-        req().POST(HttpRequest.BodyPublishers.ofString(body)).build(),
-        HttpResponse.BodyHandlers.ofString()
-    );
-    return res.body();
+  private String unwrapSse(java.net.http.HttpResponse<String> res) {
+  String body = res.body();
+  String ctype = res.headers().firstValue("content-type").orElse("");
+  if (ctype.contains("text/event-stream") || body.startsWith("data:")) { //where the JSON-RPC payload is
+    String json = body.lines()
+        .filter(l -> l.startsWith("data:"))
+        .map(l -> l.substring(5).trim()) // strip "data:"
+        .reduce((a, b) -> b)             // keep the last event
+        .orElse("{}");
+    return json;
   }
+  return body;
+}
+private String postRpc(Map<String, Object> rpc) throws Exception {
+  var body = mapper.writeValueAsString(rpc);
+  var res = http.send(
+      req().POST(HttpRequest.BodyPublishers.ofString(body)).build(),
+      HttpResponse.BodyHandlers.ofString()
+  );
+  return unwrapSse(res); 
+}
 
   @GetMapping("/tools")
   public ResponseEntity<String> tools() throws Exception {
