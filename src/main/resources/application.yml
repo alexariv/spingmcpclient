@@ -13,6 +13,13 @@ spring:
             elastic-es:
               url: http://localhost:8080
               endpoint: /mcp
+  ollama:
+    base-url: http://localhost:11434
+    chat:
+      options:
+        model: llama3.1:latest #change model here
+        #temp controls randomness- Agents&MCP tools:0.0–0.3, Explanations:0.3–0.7, Generative:0.8–1.2
+        temperature: 0.2
 logging:
   level:
     io.modelcontextprotocol: DEBUG
