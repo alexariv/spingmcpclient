@@ -1,22 +1,15 @@
 package olog.springMCPclient;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.web.bind.annotation.*;
-
-import org.slf4j.Logger; import org.slf4j.LoggerFactory;
-private static final Logger log = LoggerFactory.getLogger(ChatController.class);
-
-@PostMapping
-public String chat(@RequestBody String userMessage) {
-  log.info("CHAT: received: {}", userMessage);
-  String out = chat.prompt(userMessage).tools(tools).call().content();
-  log.info("CHAT: done ({} chars)", out.length());
-  return out;
-}
 
 @RestController
 @RequestMapping("/chat")
 public class ChatController {
+  private static final Logger log = LoggerFactory.getLogger(ChatController.class);
+
   private final ChatClient chat;
   private final ElasticTools tools;
 
@@ -30,12 +23,13 @@ public class ChatController {
 
   @PostMapping
   public String chat(@RequestBody String userMessage) {
-    return chat
+    log.info("CHAT: received: {}", userMessage);
+    String out = chat
         .prompt(userMessage)
-        .tools(tools)   //expose the MCP tools to llm
+        .tools(tools)                 // expose MCP-backed tools
         .call()
         .content();
+    log.info("CHAT: done ({} chars)", out.length());
+    return out;
   }
 }
-
-
