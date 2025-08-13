@@ -1,5 +1,5 @@
 /* Ignore this for now as this uses the spring MCPSyncClient that uses STDIO or SSE 
-but we cannot use this since the leastic server depricated the SSE option
+but we cannot use this since the elastic server depricated the SSE option
 package olog.springMCPclient;
 
 import io.modelcontextprotocol.client.McpSyncClient;

@@ -23,4 +23,8 @@ spring:
 logging:
   level:
     io.modelcontextprotocol: DEBUG
+    olog.springMCPclient: DEBUG
     org.springframework.ai.mcp: DEBUG
+    org.springframework.ai.ollama: DEBUG
+    org.springframework.ai.tool: DEBUG
+    org.springframework.ai.chat: DEBUG
